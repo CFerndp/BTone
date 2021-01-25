@@ -68,7 +68,6 @@ void loop() {
   unsigned long currentMillis = millis();
 
   if (currentMillis - previousMillisConnection >= connectionInterval) {
-    // save the last time you blinked the LED
     previousMillisConnection = currentMillis;
 
     if(a2dp_source.isConnected()){
@@ -80,7 +79,6 @@ void loop() {
   }
 
   if (currentMillis - previousMillisTone >= toneInterval && a2dp_source.isConnected()) {
-    // save the last time you blinked the LED
     previousMillisTone = currentMillis;
 
     toggle_sound();
