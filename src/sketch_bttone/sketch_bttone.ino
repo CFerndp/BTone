@@ -6,6 +6,7 @@
 */
 
 #define DEFAULT_FREQUENCY 440 // 440 -> A note
+#define PIN_BUTTON 15
 const long toneInterval = 1000; // Timeout (ms). One second of note, one second of silence
 const long connectionInterval = 1000; //Timeout (ms) to check if BT is connected
 char BT_DEVICE[] = "Redmi AirDots_R";
@@ -18,6 +19,7 @@ BluetoothA2DPSource a2dp_source;
 
 unsigned long previousMillisConnection = 0;
 unsigned long previousMillisTone = 0;
+int previousValButton = -1;
 
 int c3_frequency = DEFAULT_FREQUENCY;
 
@@ -60,6 +62,7 @@ void toggle_sound() {
 
 void setup() {
   Serial.begin(115200); 
+  pinMode(PIN_BUTTON, INPUT);
   a2dp_source.start(BT_DEVICE, get_data_channels);  
 }
 
@@ -78,10 +81,17 @@ void loop() {
     }    
   }
 
-  if (currentMillis - previousMillisTone >= toneInterval && a2dp_source.isConnected()) {
-    previousMillisTone = currentMillis;
+  if(a2dp_source.isConnected()){
+    int pinValue = digitalRead(PIN_BUTTON);
 
-    toggle_sound();
-  }  
-  
+    if(previousValButton != pinValue) {
+      if(val == HIGH) {
+        activate_sound();
+      } else {
+        deactivate_sound();
+      }
+      
+      previousValButton = pinValue;
+    }
+   }
 }
