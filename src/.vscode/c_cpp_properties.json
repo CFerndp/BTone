@@ -1,0 +1,30 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "/home/cferndp/.arduino15/packages/esp32/tools/**",
+                "/home/cferndp/Arduino/libraries/**",
+                "/home/cferndp/Software/arduino-1.8.13/libraries/**",
+                "/home/cferndp/.arduino15/packages/esp32/hardware/esp32/1.0.4/**",
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE",
+                "F_CPU=16000000L",
+                "ARDUINO=10805",
+                "ARDUINO_AVR_UNO",
+                "ARDUINO_ARCH_AVR",
+                "USBCON"
+            ],
+            "compilerPath": "/home/linuxbrew/.linuxbrew/bin/gcc",
+            "cStandard": "gnu11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "gcc-x64",
+            "forcedInclude": []
+        }
+    ],
+    "version": 4
+}
