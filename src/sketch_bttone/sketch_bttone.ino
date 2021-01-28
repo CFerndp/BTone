@@ -12,7 +12,7 @@ const uint64_t WAIT_TIMEOUT_INTERVAL_MS = 5 * 1000000;  // Meaning of first oper
 const uint64_t SOUND_TIMEOUT_INTERVAL_MS = 2 * 1000000; // Meaning of first operator: secs
 
 const long connectionInterval = 1000; //Timeout (ms) to check if BT is connected
-char BT_DEVICE[] = "Redmi AirDots_R";
+char BT_DEVICE[] = "Omaker-M075";
 
 /*
  * INTERNAL PARAMETERS
@@ -31,13 +31,13 @@ int c3_frequency = DEFAULT_FREQUENCY;
 volatile int waitInterruptCounter = 0;
 hw_timer_t *waitTimer = NULL;
 portMUX_TYPE waitTimerMux = portMUX_INITIALIZER_UNLOCKED;
-volatile int firstWaitTimer = 0;
+volatile int firstWaitTimer = 0; // When you activate a timer, the callbacks is executed just before activation. This is in order to fix it, skips first iteration.
 
 //Sound Timer
 volatile int soundInterruptCounter = 0;
 hw_timer_t *soundTimer = NULL;
 portMUX_TYPE soundTimerMux = portMUX_INITIALIZER_UNLOCKED;
-volatile int firstSoundTimer = 0;
+volatile int firstSoundTimer = 0; // When you activate a timer, the callbacks is executed just before activation. This is in order to fix it, skips first iteration.
 
 // Note callback
 int32_t get_data_channels(Channels *channels, int32_t channel_len)
