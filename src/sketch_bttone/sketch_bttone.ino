@@ -8,8 +8,8 @@
 #define DEFAULT_FREQUENCY 440 // 440 -> A note
 #define PIN_BUTTON 15
 
-#define WAIT_TIMEOUT_INTERVAL_MS 5 * 1000000  // Meaning of first operator: secs
-#define SOUND_TIMEOUT_INTERVAL_MS 2 * 1000000 // Meaning of first operator: secs
+const uint64_t WAIT_TIMEOUT_INTERVAL_MS = 5 * 1000000;  // Meaning of first operator: secs
+const uint64_t SOUND_TIMEOUT_INTERVAL_MS = 2 * 1000000; // Meaning of first operator: secs
 
 const long connectionInterval = 1000; //Timeout (ms) to check if BT is connected
 char BT_DEVICE[] = "Redmi AirDots_R";
@@ -18,7 +18,7 @@ char BT_DEVICE[] = "Redmi AirDots_R";
  * INTERNAL PARAMETERS
 */
 
-#define BOARD_FREC 240
+const uint16_t BOARD_FREC = 80;
 BluetoothA2DPSource a2dp_source;
 
 unsigned long previousMillisConnection = 0;
@@ -75,7 +75,6 @@ void IRAM_ATTR onWaitTimer()
   portENTER_CRITICAL_ISR(&waitTimerMux);
   waitInterruptCounter++;
   portEXIT_CRITICAL_ISR(&waitTimerMux);
-  Serial.println(millis());
 }
 
 void IRAM_ATTR onSoundTimer()
@@ -83,8 +82,6 @@ void IRAM_ATTR onSoundTimer()
   portENTER_CRITICAL_ISR(&soundTimerMux);
   soundInterruptCounter++;
   portEXIT_CRITICAL_ISR(&soundTimerMux);
-
-  Serial.println(millis());
 }
 
 void setup()
@@ -94,12 +91,12 @@ void setup()
   a2dp_source.start(BT_DEVICE, get_data_channels);
 
   //Wait Timer config
-  waitTimer = timerBegin(0, BOARD_FREC, false);                // Timer 0, if we divide by BOARD_FREC -> Timer will be increased 1M/s. Count up
+  waitTimer = timerBegin(0, BOARD_FREC, true);                 // Timer 0, if we divide by BOARD_FREC -> Timer will be increased 1M/s. Count up
   timerAttachInterrupt(waitTimer, &onWaitTimer, true);         //Attach callback
   timerAlarmWrite(waitTimer, WAIT_TIMEOUT_INTERVAL_MS, false); // third parameter means if it's periodical
 
   //Sound Timer config
-  soundTimer = timerBegin(2, BOARD_FREC, true);                  // Timer 1, if we divide by BOARD_FREC -> Timer will be increased 1M/s. Count up
+  soundTimer = timerBegin(1, BOARD_FREC, true);                  // Timer 1, if we divide by BOARD_FREC -> Timer will be increased 1M/s. Count up
   timerAttachInterrupt(soundTimer, &onSoundTimer, true);         //Attach callback
   timerAlarmWrite(soundTimer, SOUND_TIMEOUT_INTERVAL_MS, false); // third parameter means if it's periodical
 
@@ -164,7 +161,6 @@ void loop()
     {
       if (a2dp_source.isConnected())
       {
-        Serial.println(millis());
         timerAlarmEnable(waitTimer);
         Serial.println("Wait on!");
       }
