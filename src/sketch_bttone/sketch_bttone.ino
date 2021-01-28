@@ -31,11 +31,13 @@ int c3_frequency = DEFAULT_FREQUENCY;
 volatile int waitInterruptCounter = 0;
 hw_timer_t *waitTimer = NULL;
 portMUX_TYPE waitTimerMux = portMUX_INITIALIZER_UNLOCKED;
+volatile int firstWaitTimer = 0;
 
 //Sound Timer
 volatile int soundInterruptCounter = 0;
 hw_timer_t *soundTimer = NULL;
 portMUX_TYPE soundTimerMux = portMUX_INITIALIZER_UNLOCKED;
+volatile int firstSoundTimer = 0;
 
 // Note callback
 int32_t get_data_channels(Channels *channels, int32_t channel_len)
@@ -91,14 +93,14 @@ void setup()
   a2dp_source.start(BT_DEVICE, get_data_channels);
 
   //Wait Timer config
-  waitTimer = timerBegin(0, BOARD_FREC, true);                 // Timer 0, if we divide by BOARD_FREC -> Timer will be increased 1M/s. Count up
-  timerAttachInterrupt(waitTimer, &onWaitTimer, true);         //Attach callback
-  timerAlarmWrite(waitTimer, WAIT_TIMEOUT_INTERVAL_MS, false); // third parameter means if it's periodical
+  waitTimer = timerBegin(0, BOARD_FREC, true);                // Timer 0, if we divide by BOARD_FREC -> Timer will be increased 1M/s. Count up
+  timerAttachInterrupt(waitTimer, &onWaitTimer, true);        //Attach callback
+  timerAlarmWrite(waitTimer, WAIT_TIMEOUT_INTERVAL_MS, true); // third parameter means if it's periodical
 
   //Sound Timer config
-  soundTimer = timerBegin(1, BOARD_FREC, true);                  // Timer 1, if we divide by BOARD_FREC -> Timer will be increased 1M/s. Count up
-  timerAttachInterrupt(soundTimer, &onSoundTimer, true);         //Attach callback
-  timerAlarmWrite(soundTimer, SOUND_TIMEOUT_INTERVAL_MS, false); // third parameter means if it's periodical
+  soundTimer = timerBegin(1, BOARD_FREC, true);                 // Timer 1, if we divide by BOARD_FREC -> Timer will be increased 1M/s. Count up
+  timerAttachInterrupt(soundTimer, &onSoundTimer, true);        //Attach callback
+  timerAlarmWrite(soundTimer, SOUND_TIMEOUT_INTERVAL_MS, true); // third parameter means if it's periodical
 
   deactivate_sound();
 }
@@ -114,9 +116,18 @@ void loop()
     waitInterruptCounter--;
     portEXIT_CRITICAL(&waitTimerMux);
 
-    Serial.println("Enabling Sound Timer and sound");
-    activate_sound();
-    timerAlarmEnable(soundTimer);
+    if (firstWaitTimer > 0)
+    {
+      Serial.println("Enabling Sound Timer and sound");
+      activate_sound();
+      timerAlarmDisable(waitTimer);
+      firstWaitTimer = 0;
+      timerAlarmEnable(soundTimer);
+    }
+    else
+    {
+      firstWaitTimer++;
+    }
   }
 
   if (soundInterruptCounter > 0)
@@ -126,8 +137,17 @@ void loop()
     soundInterruptCounter--;
     portEXIT_CRITICAL(&soundTimerMux);
 
-    Serial.println("Deactivating sound");
-    deactivate_sound();
+    if (firstSoundTimer > 0)
+    {
+      Serial.println("Deactivating sound");
+      deactivate_sound();
+      firstSoundTimer = 0;
+      timerAlarmDisable(soundTimer);
+    }
+    else
+    {
+      firstSoundTimer++;
+    }
   }
 
   unsigned long currentMillis = millis();
@@ -159,7 +179,7 @@ void loop()
   {
     if (pinValue == HIGH)
     {
-      if (a2dp_source.isConnected())
+      if (a2dp_source.isConnected() && !timerAlarmEnabled(waitTimer) && !timerAlarmEnabled(soundTimer))
       {
         timerAlarmEnable(waitTimer);
         Serial.println("Wait on!");
