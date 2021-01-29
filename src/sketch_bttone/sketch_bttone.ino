@@ -6,23 +6,25 @@
 */
 
 #define DEFAULT_FREQUENCY 440 // 440 -> A note
-#define PIN_BUTTON 15
 
-const uint64_t WAIT_TIMEOUT_INTERVAL_MS = 5 * 1000000;  // Meaning of first operator: secs
+const uint64_t WAIT_TIMEOUT_INTERVAL_MS = 1 * 1000000;  // Meaning of first operator: secs
 const uint64_t SOUND_TIMEOUT_INTERVAL_MS = 2 * 1000000; // Meaning of first operator: secs
 
 const long connectionInterval = 1000; //Timeout (ms) to check if BT is connected
-char BT_DEVICE[] = "Omaker-M075";
+char BT_DEVICE[] = "Mi True Wireless EBs Basic 2";
 
 /*
  * INTERNAL PARAMETERS
 */
 
+#define TOUCH_GPIO 15
+const int TOUCH_THRESHOLD = 10;
+
 const uint16_t BOARD_FREC = 80;
 BluetoothA2DPSource a2dp_source;
 
 unsigned long previousMillisConnection = 0;
-int previousValButton = -1;
+bool previousTouchValue = -1;
 bool previousConnectedStatus = true;
 
 int c3_frequency = DEFAULT_FREQUENCY;
@@ -86,10 +88,14 @@ void IRAM_ATTR onSoundTimer()
   portEXIT_CRITICAL_ISR(&soundTimerMux);
 }
 
+bool getTouchStatus()
+{
+  return touchRead(TOUCH_GPIO) < TOUCH_THRESHOLD;
+}
+
 void setup()
 {
   Serial.begin(115200);
-  pinMode(PIN_BUTTON, INPUT);
   a2dp_source.start(BT_DEVICE, get_data_channels);
 
   //Wait Timer config
@@ -173,16 +179,20 @@ void loop()
     previousConnectedStatus = isBTConnected;
   }
 
-  int pinValue = digitalRead(PIN_BUTTON);
+  bool touchValue = getTouchStatus();
 
-  if (previousValButton != pinValue)
+  if (previousTouchValue != touchValue)
   {
-    if (pinValue == HIGH)
+    if (touchValue)
     {
-      if (a2dp_source.isConnected() && !timerAlarmEnabled(waitTimer) && !timerAlarmEnabled(soundTimer))
+      if (a2dp_source.isConnected())
       {
-        timerAlarmEnable(waitTimer);
-        Serial.println("Wait on!");
+        if (!timerAlarmEnabled(waitTimer) && !timerAlarmEnabled(soundTimer))
+        {
+
+          timerAlarmEnable(waitTimer);
+          Serial.println("Wait on!");
+        }
       }
       else
       {
@@ -191,5 +201,5 @@ void loop()
     }
   }
 
-  previousValButton = pinValue;
+  previousTouchValue = touchValue;
 }
