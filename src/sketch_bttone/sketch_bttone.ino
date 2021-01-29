@@ -5,10 +5,10 @@
  * PARAMETERS TO CHANGE: Note, Tone length and BT Speaker Name
 */
 
-#define DEFAULT_FREQUENCY 440 // 440 -> A note
+#define DEFAULT_FREQUENCY 880 // 440 -> A note
 
 const uint64_t WAIT_TIMEOUT_INTERVAL_MS = 1 * 1000000;  // Meaning of first operator: secs
-const uint64_t SOUND_TIMEOUT_INTERVAL_MS = 2 * 1000000; // Meaning of first operator: secs
+const uint64_t SOUND_TIMEOUT_INTERVAL_MS = 1 * 1000000; // Meaning of first operator: secs
 
 const long connectionInterval = 1000; //Timeout (ms) to check if BT is connected
 char BT_DEVICE[] = "Mi True Wireless EBs Basic 2";
@@ -187,12 +187,16 @@ void loop()
     {
       if (a2dp_source.isConnected())
       {
-        if (!timerAlarmEnabled(waitTimer) && !timerAlarmEnabled(soundTimer))
+        if (timerAlarmEnabled(waitTimer) || timerAlarmEnabled(soundTimer))
         {
-
-          timerAlarmEnable(waitTimer);
-          Serial.println("Wait on!");
+          timerAlarmDisable(waitTimer);
+          timerAlarmDisable(soundTimer);
+          firstSoundTimer = 0;
+          firstWaitTimer = 0;
         }
+
+        timerAlarmEnable(waitTimer);
+        Serial.println("Wait on!");
       }
       else
       {
